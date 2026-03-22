@@ -1,0 +1,31 @@
+name: Deploy Quote Generator
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Move to the project folder on your EC2
+            cd /home/ubuntu/QUOTE_GENERATOR || git clone https://github.com/GumpiliRanjith/QUOTE_GENERATOR.git /home/ubuntu/QUOTE_GENERATOR && cd /home/ubuntu/QUOTE_GENERATOR
+            
+            # 2. Get the new code you just pushed
+            
+            git pull origin main
+            
+            # 3. Restart the containers to show the new quotes
+            sudo docker-compose down
+            sudo docker-compose up --build -d
